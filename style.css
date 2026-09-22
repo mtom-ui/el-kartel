@@ -1,0 +1,2372 @@
+/* Dark (default): "Selva de noche" - Dschungel, Hibiskus, Papaya. */
+:root {
+  --bg: #0b2e24;
+  --card-bg: #123527;
+  --card-bg-2: #16402f;
+  --border: #1a4a38;
+  --green-900: #ff8a3d;
+  --green-700: #d97230;
+  /* Bewusst etwas heller als --green-900 statt exakt gleich: beide standen
+     vorher auf demselben Wert, dadurch war z. B. "knapper Markt" optisch
+     nicht vom Normalpreis zu unterscheiden. */
+  --green-500: #ffa463;
+  --green-100: #16402f;
+  /* Gold, NICHT das Rot von --danger: --amber markiert durchweg Positives
+     (Platz 1, Prognose, "alles eingeteilt"). Solange beide auf #e23e57
+     standen, sah der Sieger aus wie ein Fehler. */
+  --amber: #f7b733;
+  --danger: #e23e57;
+  /* Deutlich heller als das frühere #1f6f4f: auf --card-bg (#123527) kam das
+     auf ca. 2:1 Kontrast - ausgerechnet fürs "hat abgegeben"-Häkchen, das
+     wichtigste Signal auf dem Fernseher. */
+  --jade: #4cc08a;
+  --text: #eaf2ec;
+  --muted-1: #b9cfc3;
+  --muted-2: #7fa394;
+  --muted-3: #d3e5dc;
+  --accent-rgb: 255, 138, 61;
+  --danger-rgb: 226, 62, 87;
+  --disabled-bg: #1a4a38;
+  --shadow-card: rgba(0, 0, 0, 0.45);
+  --shadow-card-hover: rgba(0, 0, 0, 0.55);
+  --shadow-ambient: rgba(0, 0, 0, 0.35);
+  --card-highlight: rgba(255, 255, 255, 0.04);
+  --rule: rgba(234, 242, 236, 0.13);
+  --terr-0: #205943;
+  --terr-1: #277150;
+  --terr-2: #2f8a5f;
+  --terr-3: #39a471;
+  --terr-4: #4cc08a;
+  --radial-glow: #16402f;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+}
+
+/* Light: "Mercado" - Marktstände, Textilien, gebrannter Ton. Terracota ist
+   hier bewusst die Hintergrund-/Hauptfarbe (nicht nur ein Akzent auf hellem
+   Creme) - Karten sind ein dunkleres Terracota, Text ist hell (Cal), und Gold
+   (Cempasúchil) übernimmt die Rolle als Pop-Akzent für Überschriften/Buttons,
+   weil Terracota-auf-Terracota sonst unlesbar wäre. */
+:root[data-theme="light"] {
+  --bg: #c1440e;
+  --card-bg: #ad3a0b;
+  --card-bg-2: #b8420e;
+  --border: #e8875a;
+  --green-900: #f7b733;
+  --green-700: #f2a007;
+  --green-500: #ffcc5c;
+  --green-100: #8f2f08;
+  /* Helleres Gold als --green-900, sonst verschwindet die Auszeichnung
+     "Platz 1" im normalen Akzent (beide standen vorher auf #f7b733). */
+  --amber: #ffe08a;
+  --danger: #ff7a63;
+  --jade: #8fd4a8;
+  --text: #fbf3e4;
+  --muted-1: #f0d9c4;
+  --muted-2: #d9ae8c;
+  --muted-3: #f5e6d3;
+  --accent-rgb: 247, 183, 51;
+  --danger-rgb: 255, 122, 99;
+  --disabled-bg: #8f2f08;
+  --shadow-card: rgba(0, 0, 0, 0.28);
+  --shadow-card-hover: rgba(0, 0, 0, 0.38);
+  --shadow-ambient: rgba(0, 0, 0, 0.22);
+  --card-highlight: rgba(255, 255, 255, 0.08);
+  --rule: rgba(251, 243, 228, 0.2);
+  /* Spielergebiete in der Gold-Skala über dem Hintergrund, unkontrolliertes
+     Land klar darunter: so hebt sich beides vom Terracota ab und "viel
+     Kapital" liest sich als heller statt als dunkler. */
+  --terr-0: #cf6a24;
+  --terr-1: #dc7c2c;
+  --terr-2: #e68f35;
+  --terr-3: #efa23f;
+  --terr-4: #f7b733;
+  --radial-glow: #d9591f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  touch-action: manipulation;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-display);
+  background: radial-gradient(ellipse 1100px 700px at 50% -8%, var(--radial-glow) 0%, var(--bg) 55%) fixed, var(--bg);
+  color: var(--text);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+h1,
+h2,
+h3,
+h4,
+.btn,
+.game-code,
+th,
+.leaderboard-name,
+.price-value,
+.gear-item,
+.stepper-btn {
+  font-family: var(--font-display);
+}
+
+.boot-loading {
+  padding: 40px;
+  text-align: center;
+  font-size: 1.4rem;
+}
+
+.screen {
+  position: relative;
+  min-height: 100vh;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  animation: fadeInUp 0.35s ease both;
+}
+
+/* Am Handy fressen 32px Rand links und rechts 17% der Breite weg - dort
+ * reicht der halbe Abstand. Greift nur unterhalb der Tablet-Grenze, der
+ * Fernseher behält seinen großzügigen Rahmen. */
+@media (max-width: 700px) {
+  .screen {
+    padding: 20px 16px;
+    gap: 16px;
+  }
+
+  /* Mit dem Rand mitwandern, sonst steht das Zahnrad weiter innen als der
+     restliche Inhalt. */
+  .screen-toolbar {
+    top: 16px;
+    right: 16px;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 6px 18px var(--shadow-ambient), inset 0 1px 0 var(--card-highlight), 0 0 0 rgba(var(--accent-rgb), 0);
+  }
+  35% {
+    box-shadow: 0 6px 18px var(--shadow-ambient), inset 0 1px 0 var(--card-highlight), 0 0 22px rgba(var(--accent-rgb), 0.5);
+  }
+  100% {
+    box-shadow: 0 6px 18px var(--shadow-ambient), inset 0 1px 0 var(--card-highlight), 0 0 0 rgba(var(--accent-rgb), 0);
+  }
+}
+
+@keyframes pulseOpacity {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Auflösungs-Sequenz ("Ernte -> Markt -> Razzien -> Bilanz") ---------------
+ * Reine, einmalige CSS-Übergänge (kein Filter, keine Endlosschleife) - der
+ * Bildschirm lebt exakt so lange wie die Sequenz und wird danach durch das
+ * Ergebnis ersetzt, keine Wiederholung nötig. */
+
+.screen-resolve {
+  justify-content: center;
+  gap: 40px;
+}
+
+/* Feste statt minimale Höhe, damit results-grid (flex:1) die komplette
+ * restliche Höhe unter Überschrift/Lage-Banner ausfüllt statt sich auf den
+ * Kachelinhalt zu schrumpfen - siehe .results-grid weiter unten. */
+.screen-results {
+  height: 100vh;
+  overflow: hidden;
+}
+
+@media (max-width: 1100px) {
+  .screen-results {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+}
+
+/* Dieselbe Größe wie das h1 des Ergebnisbildschirms: "Jahr 3 wird
+ * ausgewertet" und "Jahr 3 ausgewertet" sind derselbe Satz an derselben
+ * Stelle - wenn er beim Übergang die Größe wechselt, springt das Bild. */
+.resolve-round {
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: var(--green-900);
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 16px rgba(var(--accent-rgb), 0.25);
+}
+
+/* Breiter als die früheren 620px: die Auflösung ist der dramatische Moment
+ * der Runde und hing auf einem 1920er Fernseher als schmale Kette von 32%
+ * Breite in der Mitte. */
+.resolve-steps {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.resolve-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  width: 120px;
+}
+
+.resolve-step-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  color: var(--muted-2);
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.resolve-step-label {
+  transition: color 0.3s ease;
+}
+
+/* Die aktive Station bekommt einen kurzen Einsprung-Puls - deutlich genug,
+ * um als "jetzt passiert das" zu lesen, aber einmalig statt dauerhaft. */
+.resolve-step.is-active .resolve-step-icon {
+  background: var(--green-100);
+  border-color: var(--green-500);
+  color: var(--green-900);
+  animation: resolveStepPop 0.45s ease;
+}
+
+.resolve-step.is-active .resolve-step-label {
+  color: var(--green-900);
+}
+
+.resolve-step.is-done .resolve-step-icon {
+  background: var(--green-500);
+  border-color: var(--green-500);
+  color: var(--bg);
+}
+
+.resolve-step.is-done .resolve-step-label {
+  color: var(--muted-1);
+}
+
+@keyframes resolveStepPop {
+  0% {
+    transform: scale(0.8);
+  }
+  55% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Verbindungsstriche zwischen den Stationen - füllen sich mit, sobald die
+ * vorangehende Station abgeschlossen ist. Marginierung schiebt sie auf
+ * Höhe der Kreismitte (26px = halbe Icon-Höhe) statt der Labelzeile. */
+.resolve-connector {
+  flex: 1;
+  height: 2px;
+  margin-top: 26px;
+  background: var(--border);
+  transition: background 0.4s ease;
+}
+
+.resolve-connector.is-done {
+  background: var(--green-500);
+}
+
+.resolve-note {
+  margin: 0;
+  min-height: 1.4em;
+  font-size: 0.95rem;
+  color: var(--muted-1);
+  animation: resolveNoteFade 0.4s ease;
+}
+
+@keyframes resolveNoteFade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+h1 {
+  color: var(--green-900);
+  margin: 0;
+  font-weight: 700;
+  font-size: 2.1rem;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 16px rgba(var(--accent-rgb), 0.25);
+}
+
+h2 {
+  color: var(--green-700);
+  margin: 16px 0 4px;
+  align-self: flex-start;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 1.05rem;
+  letter-spacing: 0.06em;
+}
+
+.subtitle {
+  color: var(--muted-1);
+  margin-top: -12px;
+}
+
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 14px 28px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--green-900), var(--green-500));
+  color: var(--bg);
+  box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 6px 20px rgba(var(--accent-rgb), 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+  filter: brightness(0.97);
+}
+
+.btn-primary:disabled {
+  background: var(--disabled-bg);
+  color: var(--muted-2);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-xl {
+  font-size: 1.3rem;
+  padding: 18px 36px;
+}
+
+/* Ein einziges Kartenrezept für alle Flächen, die im Layout dieselbe Rolle
+ * spielen. Vorher hatte praktisch jede ihre eigene Mischung: .org-row ohne
+ * Rahmen und ohne Schatten mit 12px Radius, .result-tile mit beidem und 14px,
+ * die Lobby-Karten mit 16px - obwohl sie nebeneinander als Geschwister
+ * gelesen werden. Schatten + feiner oberer Lichtkante, damit das dunkle
+ * Schema nicht als flache Blöcke derselben Farbe erscheint. */
+.lobby-join,
+.lobby-players,
+.leaderboard-entry,
+.result-tile,
+.org-row,
+.prev-summary {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 10px 28px var(--shadow-card), inset 0 1px 0 var(--card-highlight);
+}
+
+/* Das Modal ist bewusst eine Stufe darüber (schwebende Ebene statt Karte im
+ * Fluss) und behält seinen größeren Radius. */
+.help-modal {
+  box-shadow: 0 10px 28px var(--shadow-card), inset 0 1px 0 var(--card-highlight);
+}
+
+.leaderboard-entry {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.leaderboard-entry:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px var(--shadow-card-hover), inset 0 1px 0 var(--card-highlight);
+}
+
+/* Lobby ------------------------------------------------------------- */
+
+/* Wie .screen-finished: beide Warte-Bildschirme hatten kein eigenes Layout
+ * und klebten oben am Rand, während unten ein Drittel des Fernsehers leer
+ * blieb. */
+.screen-start,
+.screen-lobby {
+  justify-content: center;
+}
+
+.lobby-grid {
+  display: flex;
+  gap: 48px;
+  flex-wrap: wrap;
+  justify-content: center;
+  /* stretch statt flex-start: sonst steht die kurze Spielerkarte als Stummel
+     neben der hohen QR-Karte. */
+  align-items: stretch;
+  width: 100%;
+}
+
+.lobby-join {
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-code {
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: var(--green-900);
+}
+
+.qr {
+  margin: 12px 0;
+  border-radius: 8px;
+  animation: popIn 0.4s ease;
+}
+
+.join-url {
+  font-size: 0.85rem;
+  color: var(--muted-1);
+  word-break: break-all;
+}
+
+.hint {
+  color: var(--muted-2);
+  font-size: 0.9rem;
+}
+
+.lobby-players {
+  padding: 24px 32px;
+  min-width: 240px;
+  text-align: left;
+}
+
+.player-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Playing / TV -------------------------------------------------------- */
+
+/* Fest in der oberen rechten Ecke statt als Element im Fluss: mit dem
+ * 1100px-Deckel hing das Zahnrad auf einem 1920er Fernseher 410px von der
+ * rechten Kante entfernt mitten im Bild, und seit die Startseite/Lobby ihren
+ * Inhalt vertikal zentrieren, würde es sonst mitzentriert. */
+.screen-toolbar {
+  position: absolute;
+  top: 24px;
+  right: 32px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  z-index: 2;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.event-banner {
+  background: linear-gradient(135deg, var(--card-bg-2), var(--green-100));
+  border: 1px solid var(--green-500);
+  border-radius: 10px;
+  padding: 10px 24px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  box-shadow: 0 6px 18px var(--shadow-ambient), inset 0 1px 0 var(--card-highlight);
+  animation: glowPulse 1.4s ease-out;
+}
+
+.sep {
+  opacity: 0.4;
+}
+
+.stat {
+  display: flex;
+  gap: 6px;
+}
+
+/* Ergebnisbildschirm ----------------------------------------------------- */
+
+/* Eine Kachel je Erzeugnis plus eine Gesamt-Kachel, jede ein eigenes
+ * kleines Leaderboard - siehe renderRoundResults() in host.js. Fünf feste
+ * Spalten (vier Erzeugnisse + Gesamt), damit die Gesamt-Kachel als fünfte
+ * Karte rechts in derselben Reihe steht statt in die nächste Zeile zu
+ * umbrechen - und alle Kacheln nutzen per flex:1 die volle Bildschirmhöhe. */
+.results-grid {
+  width: 100%;
+  max-width: none;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+  text-align: left;
+}
+
+@media (max-width: 1100px) {
+  .results-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    flex: none;
+  }
+
+  .result-tile-list {
+    flex: none;
+    overflow-y: visible;
+  }
+}
+
+/* Hintergrund/Rahmen/Radius/Schatten kommen aus dem gemeinsamen
+ * Kartenrezept weiter oben. */
+.result-tile {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.result-tile.is-total {
+  border-color: var(--green-500);
+}
+
+.result-tile-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-weight: 700;
+  color: var(--green-900);
+  padding-bottom: 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.result-tile-sub {
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--muted-2);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.result-tile-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.result-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--card-highlight);
+}
+
+.result-row:last-child {
+  border-bottom: 0;
+}
+
+/* Wer die Kategorie gar nicht bedient hat, tritt sichtbar zurück - relevant
+ * bleibt, wer wirklich mitgespielt hat. */
+.result-row.is-empty {
+  opacity: 0.4;
+}
+
+.result-row-rank {
+  flex-shrink: 0;
+  width: 26px;
+  padding-top: 1px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.result-row-rank.is-first {
+  color: var(--amber);
+}
+
+.result-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.result-row-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.result-row-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Dieselbe Akzentfarbe wie jeder andere Kapitalbetrag im Spiel (Organisations-
+ * karten, Handy-Vorschau) - eigens gewählte Farben pro Kachel würden nur
+ * gegeneinander konkurrieren. */
+.result-row-revenue {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--green-900);
+}
+
+.result-row-revenue.neg {
+  color: var(--danger);
+}
+
+.result-row-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  font-size: 0.76rem;
+  color: var(--muted-1);
+}
+
+.result-row-stats .stat {
+  gap: 4px;
+}
+
+.detail-btn {
+  background: var(--green-100);
+  border: 1px solid var(--green-500);
+  border-radius: 8px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-size: 0.76rem;
+  color: var(--green-900);
+}
+
+/* Ziffern behalten während der Flap-Animation (siehe js/anim.js) eine feste
+ * Breite - sonst "hüpft" der Text, weil Ziffern in manchen Schriftschnitten
+ * unterschiedlich breit sind. */
+.flap-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Zebrastreifen und Hover machen Tabellen mit mehreren Zeilen leichter
+ * lesbar; is-ready bekommt zusätzlich einen Farbstreifen am Rand statt nur
+ * eine Hintergrundfläche, damit man abgegebene Entscheidungen auf einen
+ * Blick erkennt, auch in Reihen, die sowieso schon eingefärbt wären. */
+
+.neg {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+/* Leaderboard ------------------------------------------------------------ */
+
+/* Der Abschlussbericht ist der Moment, den am Ende alle gemeinsam anschauen -
+ * er hatte aber als einziger TV-Bildschirm gar kein eigenes Layout und erbte
+ * nur das oben gepackte .screen. Ergebnis: bei 2 Organisationen lagen 60% des
+ * Fernsehers brach, bei 8 rutschte der "Neues Spiel"-Button 160px unter die
+ * Kante - auf einem Gerät, an dem niemand scrollen kann. min-height statt
+ * height, damit vertikales Zentrieren den Inhalt nie abschneidet. */
+.screen-finished {
+  justify-content: center;
+}
+
+.leaderboard {
+  width: 100%;
+  max-width: 1500px;
+  /* Mehrspaltig statt einer langen Liste: acht Organisationen passen so in
+     drei Reihen auf den Bildschirm statt in acht. */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+  gap: 12px 16px;
+}
+
+.leaderboard-entry {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  text-align: left;
+  align-items: flex-start;
+}
+
+.rank {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--amber);
+}
+
+.leaderboard-name {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.leaderboard-report {
+  margin: 6px 0;
+  color: var(--muted-1);
+}
+
+.leaderboard-scores {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+}
+
+/* Player / mobile --------------------------------------------------------- */
+
+.screen-join .name-input {
+  font-size: 1.2rem;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  width: 100%;
+  max-width: 320px;
+}
+
+.screen-controller {
+  align-items: stretch;
+  text-align: left;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* Zwei Zeilen statt einer dreispaltigen Flex-Zeile: Name+Rolle können lang
+ * werden ("Tom Münster · 🧪 Koch"), was die Jahr-Anzeige vorher so weit
+ * einengte, dass "Jahr 1 / 10" mitten im Wort umgebrochen ist. Jetzt hat der
+ * Name die ganze erste Zeile, der Rundenstand ist ein Chip, der nie umbricht,
+ * und die Umschalter stehen in einer eigenen zweiten Zeile. */
+.controller-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--green-900);
+}
+
+.controller-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.controller-name {
+  min-width: 0;
+}
+
+.round-chip {
+  flex-shrink: 0;
+  white-space: nowrap;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 0.85rem;
+}
+
+.controller-header .topbar-actions {
+  justify-content: flex-end;
+}
+
+.resource-strip {
+  display: flex;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+}
+
+.forecast {
+  color: var(--amber);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.resource-table-details {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.resource-table-details summary {
+  font-weight: 700;
+  color: var(--green-900);
+  cursor: pointer;
+}
+
+.resource-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-size: 0.9rem;
+}
+
+.resource-table td {
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.resource-table td.value {
+  text-align: right;
+  font-weight: 700;
+}
+
+.market-sell {
+  padding: 10px 0;
+}
+
+.market-row {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.market-row:last-child {
+  border-bottom: none;
+}
+
+/* Titel + Preis nebeneinander - beides kurzer Text, passt auch auf schmale
+ * Screens. Menge/Volumen und der Regler stehen darunter über die volle
+ * Breite, statt sich in eine dritte Spalte quetschen zu müssen (das hat auf
+ * dem Handy Einheiten wie "kg" mitten im Wort umgebrochen). */
+.market-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.market-row-title {
+  flex-shrink: 0;
+}
+
+.market-row-sub {
+  font-size: 0.78rem;
+  color: var(--muted-2);
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.price-value {
+  font-weight: 700;
+  color: var(--green-900);
+  white-space: nowrap;
+  text-align: right;
+}
+
+/* Eigene Erzeugungsmenge - die Zahl, die man selbst steuert. */
+.price-amount {
+  font-weight: 700;
+  color: var(--muted-3);
+}
+
+.price-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.price-control input[type="range"] {
+  flex: 1;
+}
+
+.price-pct {
+  min-width: 42px;
+  text-align: right;
+  font-weight: 700;
+  color: var(--green-700);
+}
+
+.remaining {
+  font-weight: 700;
+  color: var(--green-700);
+  margin: 8px 0;
+}
+
+.remaining.neg {
+  color: var(--danger);
+}
+
+.prev-summary {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: left;
+  width: 100%;
+  max-width: 480px;
+}
+
+.breakdown {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.bd-section {
+  margin: 14px 0;
+}
+
+.bd-section h4 {
+  margin: 0 0 6px;
+  color: var(--green-700);
+  font-size: 0.95rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+}
+
+.bd-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 3px 0;
+  font-size: 0.85rem;
+}
+
+.bd-row span:first-child {
+  color: var(--muted-1);
+}
+
+.bd-value {
+  text-align: right;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.bd-note {
+  font-size: 0.82rem;
+  color: var(--amber);
+  padding: 2px 0;
+}
+
+.setup-steps {
+  text-align: left;
+  max-width: 480px;
+}
+
+/* Optionen-Zahnrad --------------------------------------------------------- */
+
+/* Neustart, Farbschema und Anleitung sind Nebensachen - sichtbar bleibt nur
+ * ein Zahnrad, das sie bei Bedarf ausklappt. */
+.gear-menu {
+  position: relative;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.gear-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  background: none;
+  border: 0;
+  color: var(--muted-2);
+  cursor: pointer;
+  transition: color 0.15s ease, transform 0.3s ease;
+}
+
+.gear-btn:hover,
+.gear-btn.is-open {
+  color: var(--green-900);
+}
+
+.gear-btn.is-open {
+  transform: rotate(60deg);
+}
+
+.gear-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 40;
+  min-width: 170px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--card-bg);
+  box-shadow: 0 12px 30px var(--shadow-ambient);
+  transform-origin: top right;
+  /* Ohne "both": das Menü ist auch dann sichtbar, wenn der Browser
+   * Animationen anhält (z.B. in einem Hintergrund-Tab). */
+  animation: gearPop 0.14s ease;
+}
+
+@keyframes gearPop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.96);
+  }
+}
+
+.gear-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gear-item:hover {
+  background: var(--green-100);
+  color: var(--green-900);
+}
+
+/* Help modal --------------------------------------------------------------- */
+
+.help-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.help-modal {
+  background: var(--card-bg);
+  border-radius: 16px;
+  max-width: 560px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.help-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--card-bg);
+}
+
+.help-modal-header h2 {
+  margin: 0;
+  color: var(--green-900);
+}
+
+.help-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--muted-2);
+}
+
+.help-modal-body {
+  padding: 8px 24px 24px;
+}
+
+.help-section {
+  margin: 16px 0;
+}
+
+.help-section h3 {
+  margin: 0 0 4px;
+  color: var(--green-700);
+  font-size: 1rem;
+}
+
+.help-section p {
+  margin: 0;
+  color: var(--muted-3);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+/* Mitgliederverteilung: Plus/Minus-Stepper statt Slider --------------------- */
+
+.worker-cap-note {
+  font-size: 0.82rem;
+  color: var(--green-700);
+  margin: 2px 0 8px;
+}
+
+.worker-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.worker-label {
+  flex: 1;
+}
+
+.worker-hint {
+  font-size: 0.78rem;
+  color: var(--muted-2);
+  margin-top: 2px;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.stepper-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--green-500);
+  background: var(--green-100);
+  color: var(--green-900);
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+  transition: transform 0.12s ease, background 0.15s ease;
+}
+
+.stepper-btn:active:not(:disabled) {
+  transform: scale(0.86);
+  background: var(--green-500);
+  color: var(--bg);
+}
+
+.stepper-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.stepper-value {
+  min-width: 28px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.remaining.all-used {
+  color: var(--amber);
+}
+
+/* Maßnahmen (Checkboxen) ---------------------------------------------------- */
+
+.measure-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.measure-row input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+}
+
+/* Wetter/Marktereignis-Banner aufs Handy ------------------------------------ */
+
+.weather-banner {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+}
+
+.weather-desc {
+  font-weight: 400;
+  font-size: 0.82rem;
+  color: var(--muted-1);
+  margin-top: 2px;
+}
+
+/* Live-Vorschau -------------------------------------------------------------- */
+
+.preview-box {
+  padding: 10px 0;
+}
+
+.preview-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: baseline;
+  padding: 4px 0;
+  font-size: 0.9rem;
+}
+
+.preview-detail {
+  font-size: 0.78rem;
+  color: var(--muted-2);
+  text-align: right;
+}
+
+.preview-money {
+  font-weight: 700;
+  text-align: right;
+}
+
+.preview-money.neg {
+  color: var(--danger);
+}
+
+.preview-sep {
+  border-top: 1px solid var(--border);
+  margin: 8px 0;
+}
+
+.preview-total {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 800;
+  font-size: 1.15rem;
+  padding: 6px 0;
+}
+
+.preview-total.pos {
+  color: var(--jade);
+}
+
+.preview-total.neg {
+  color: var(--danger);
+}
+
+.preview-deltas {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--muted-1);
+}
+
+.preview-empty {
+  color: var(--muted-2);
+  font-style: italic;
+  font-size: 0.88rem;
+}
+
+/* TV: Vollbild-Layout statt schmaler Seitenspalte --------------------------- */
+
+/* Staggered entrance for rows/cards so lists feel assembled, not dumped. */
+.leaderboard-entry {
+  animation: fadeInUp 0.4s ease both;
+}
+
+.leaderboard-entry:nth-child(1) {
+  animation-delay: 0.02s;
+}
+.leaderboard-entry:nth-child(2) {
+  animation-delay: 0.06s;
+}
+.leaderboard-entry:nth-child(3) {
+  animation-delay: 0.1s;
+}
+.leaderboard-entry:nth-child(4) {
+  animation-delay: 0.14s;
+}
+.leaderboard-entry:nth-child(n + 5) {
+  animation-delay: 0.18s;
+}
+
+/* Rollenauswahl bei der Anmeldung ------------------------------------------- */
+
+.role-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.role-card {
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.role-card-title {
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.role-card-hint {
+  font-size: 0.82rem;
+  color: var(--muted-2);
+  line-height: 1.35;
+}
+
+.role-card.selected {
+  border-color: var(--green-500);
+  background: var(--green-100);
+}
+
+/* Vermögensziel-Fortschritt aufs Handy --------------------------------------- */
+
+.finance-goal {
+  padding: 8px 0 12px;
+}
+
+.finance-goal-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.finance-goal-bar {
+  height: 10px;
+  border-radius: 6px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.finance-goal-fill {
+  height: 100%;
+  background: var(--green-500);
+  transition: width 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Eigene Icons ------------------------------------------------------------- */
+
+.ic {
+  flex-shrink: 0;
+  vertical-align: -0.18em;
+}
+
+.ic-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+/* Organisationskarten (TV) -------------------------------------------------- */
+
+.org-name {
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.org-role {
+  font-size: 0.82rem;
+  color: var(--muted-2);
+  margin-top: 3px;
+}
+
+.org-state {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+.org-state.is-done {
+  color: var(--jade);
+  border-color: var(--jade);
+}
+
+.org-cash-value {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--green-900);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+/* Balken -------------------------------------------------------------------- */
+
+.bar-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+  margin-top: 5px;
+}
+
+.bar-track.is-slim {
+  height: 6px;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+/* Bewusst nur zwei Stufen statt drei: die dritte, gedämpfte Farbe für den
+ * weitaus häufigsten Fall "gut" war im dunklen Schema (--jade) kaum vom
+ * leeren Balken zu unterscheiden - der Balken verschwand praktisch. Der
+ * normale Fall bekommt jetzt dieselbe kräftige Akzentfarbe wie Kapital/Preis,
+ * nur der wirklich kritische Bereich (<40%) schlägt in Rot um. */
+.bar-fill.is-ok {
+  background: var(--green-500);
+}
+
+.bar-fill.is-low {
+  background: var(--danger);
+}
+
+.bar-fill.is-cash {
+  background: linear-gradient(90deg, var(--green-700), var(--green-500));
+}
+
+.stock-item.has-stock {
+  color: var(--green-900);
+  font-weight: 700;
+}
+
+/* Betriebs-Animation (TV) ---------------------------------------------------- */
+
+/* position:sticky statt fixed: der Bildschirm hat eine fadeInUp-Animation mit
+ * fill-mode both, behält also dauerhaft eine transform - und ein
+ * transformierter Vorfahr macht aus "fixed zum Viewport" ein "fixed zum
+ * Vorfahren". Das Band wäre damit unter die Sichtkante gerutscht. Sticky
+ * bezieht sich dagegen auf den Scrollbereich und bleibt unten kleben. */
+
+/* --card-bg-2 ist im hellen Schema fast identisch mit dem Hintergrund, der
+ * Hügel war dort unsichtbar. --border mit Transparenz trägt in beiden. */
+
+@keyframes sc-drive {
+  from {
+    transform: translateX(-120px);
+  }
+  to {
+    transform: translateX(2120px);
+  }
+}
+
+@keyframes sc-step {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2.5px);
+  }
+}
+
+.weather-line {
+  display: flex;
+  align-items: center;
+  gap: 6px 18px;
+  flex-wrap: wrap;
+}
+
+/* ===========================================================================
+   TV-Dashboard
+   ---------------------------------------------------------------------------
+   Ein Bildschirm, kein Scrollen: Kopfzeile, drei Spalten, Fußzeile. Die
+   seitlichen Spalten haben feste Breiten, die Karte in der Mitte nimmt den
+   Rest und skaliert über preserveAspectRatio mit. Getrennt wird allein über
+   Weißraum - keine Linien, keine Kästen, damit das Bild ruhig bleibt.
+   =========================================================================== */
+
+.screen-dash {
+  height: 100vh;
+  display: grid;
+  /* Genau drei Kinder: Kopf, Body, Fuß. War auf vier Zeilen ausgelegt, aus
+   * einer Zeit mit einem Laufband unter dem Kopf - das ist inzwischen weg,
+   * die überzählige Zeile hier aber stehen geblieben. Damit landete der Body
+   * in einer auto-Zeile (schrumpft auf seinen Inhalt) statt in der
+   * eigentlich wachsenden 1fr-Zeile, die dadurch leer blieb - der ganze
+   * ungenutzte Platz unter den Karten/Charts kam von hier. */
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  animation: fadeInUp 0.35s ease both;
+}
+
+/* Kopfzeile ---------------------------------------------------------------- */
+
+/* Drei Spalten statt space-between: die beiden Außenspalten sind gleich
+ * breit, dadurch steht "Jahr x von 10" in der Mitte des Bildschirms und
+ * nicht in der Mitte des Rests, der zwischen Titel und Zahnrad übrig ist. */
+.dash-head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 24px;
+}
+
+.dash-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  color: var(--green-900);
+  font-weight: 700;
+  /* Hatte vorher gar keine Angabe und landete damit auf 16px - der Spieltitel
+     war auf dem Fernseher kleiner als die Jahreszahl daneben (1.5rem). */
+  font-size: 1.15rem;
+}
+
+.dash-head .dash-round {
+  justify-self: center;
+}
+
+.dash-head .topbar-actions {
+  justify-self: end;
+}
+
+.dash-code {
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  color: var(--muted-2);
+  font-weight: 600;
+}
+
+.dash-round {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+/* Größe/Farbe/Laufweite kommen aus der gemeinsamen Eyebrow-Regel oben. */
+
+.dash-round-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.dash-round-total {
+  font-size: 0.76rem;
+  color: var(--muted-2);
+}
+
+/* Spalten ------------------------------------------------------------------ */
+
+/* Zwei gleich breite Spalten: links die Organisationen, rechts Lage +
+ * Marktlage - deren Kombi-Charts brauchen Platz, um wirklich lesbar zu
+ * bleiben, daher bewusst die Hälfte statt einer schmalen Seitenleiste. */
+.dash-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 1fr);
+  min-height: 0;
+}
+
+.dash-col {
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  overflow: hidden;
+}
+
+.dash-col-right {
+  gap: 18px;
+}
+
+/* "Eyebrow" - das kleine Label über einem Block. Dieselben Werte gelten für
+ * .dash-round-label, .resolve-step-label und .bot-add-head; vorher hatte jede
+ * dieser vier Stellen eigene Größe/Laufweite/Farbe, obwohl sie dieselbe Rolle
+ * spielen. */
+.panel-head,
+.dash-round-label,
+.resolve-step-label,
+.bot-add-head {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+  font-weight: 600;
+}
+
+.panel-head {
+  margin: 0;
+  align-self: stretch;
+}
+
+/* Organisationen ----------------------------------------------------------- */
+
+/* Zwei Spalten statt einer einzigen Liste: dieselbe (volle, nie gestauchte)
+ * Kartengröße passt bei 8 Organisationen in 4 statt 8 Zeilen - genau der
+ * Höhenspielraum, den vorher nur der eigens dafür verkleinerte "dichte" Modus
+ * hatte. Nutzt außerdem die Spaltenbreite aus, die seit Marktlage/Lage rechts
+ * eine eigene Hälfte bekommen haben, ungenutzt blieb.
+ *
+ * Bewusst OHNE align-content:start: bei wenigen Organisationen (2-4) bleiben
+ * sonst ein oder zwei Zeilen oben gepackt und der ganze Rest der Spalte unter
+ * den Karten leer - Platz ist auf diesem einen Bildschirm zu knapp, um ihn so
+ * zu verschenken. Ohne die Einschränkung wachsen die Zeilen (und damit die
+ * Karten, siehe .org-row) auf die volle verfügbare Höhe. */
+.org-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
+
+.org-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.org-list::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border-radius: 4px;
+}
+
+.org-row {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  /* space-between statt festem gap: wächst die Zeile (siehe .org-list), weil
+   * wenige Organisationen mitspielen, verteilt sich der Karteninhalt über die
+   * gewachsene Höhe, statt oben zu kleben und darunter Leerraum zu lassen. */
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
+  animation: fadeInUp 0.4s ease both;
+}
+
+/* Abgegeben: heller unterlegt statt umrandet. */
+.org-row.is-ready {
+  background: var(--green-100);
+}
+
+.org-row-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Farbtupfer in derselben Skala wie das eigene Territorium auf der Karte. */
+.org-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  background: var(--terr-2);
+}
+
+.org-swatch.is-t0 { background: var(--terr-0); }
+.org-swatch.is-t1 { background: var(--terr-1); }
+.org-swatch.is-t2 { background: var(--terr-2); }
+.org-swatch.is-t3 { background: var(--terr-3); }
+.org-swatch.is-t4 { background: var(--terr-4); }
+
+.org-row .org-name {
+  font-size: 0.98rem;
+  font-weight: 700;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.org-row .org-role {
+  margin: 0;
+  display: flex;
+  color: var(--muted-2);
+}
+
+.org-row .org-state {
+  padding: 0;
+  border: 0;
+  display: flex;
+  color: var(--muted-2);
+}
+
+.org-row .org-state.is-done {
+  color: var(--jade);
+  border: 0;
+}
+
+/* Personal und Fläche - dieselben zwei Zahlen, die auf dem Handy unter
+ * "Investieren" gekauft werden. Ohne sie war auf dem Fernseher nicht zu
+ * sehen, wie groß eine Organisation eigentlich ist, nur wie es ihr geht. */
+.org-capacity {
+  display: flex;
+  gap: 12px;
+  font-size: 0.74rem;
+  color: var(--muted-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.org-cash-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.org-row .org-cash-value {
+  font-size: 1.2rem;
+}
+
+.org-goal {
+  font-size: 0.68rem;
+  color: var(--muted-2);
+  white-space: nowrap;
+}
+
+.org-mini-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Ton-Klasse sitzt am ganzen Element (siehe miniBar() in host.js), färbt über
+ * currentColor also Icon UND Zahl mit ein - nicht nur den Füllbalken. Bei
+ * "kritisch" fällt eine Organisation damit schon am Icon auf, nicht erst
+ * beim genauen Hinsehen auf den Balken. */
+.mini-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted-1);
+}
+
+.mini-bar.is-low {
+  color: var(--danger);
+}
+
+.mini-bar .bar-track {
+  flex: 1;
+}
+
+/* Von 3px auf 6px: bei 3px ging der Füllbalken auf dem TV aus einigen Metern
+ * Entfernung optisch komplett unter, egal welche Farbe er hatte. */
+.bar-track.is-micro {
+  height: 6px;
+}
+
+.mini-bar-value {
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  min-width: 22px;
+  text-align: right;
+}
+
+.org-row .org-stock {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 0.7rem;
+}
+
+/* Marktlage & Lage --------------------------------------------------------- */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  min-width: 0;
+}
+
+/* Marktlage füllt den Rest der Spalte statt oben liegen zu bleiben und
+ * darunter Platz zu verschenken - die Lage-Kachel darüber behält ihre
+ * natürliche (kurze) Höhe, den Rest bekommt der Chart-Block. */
+.panel-market {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Marktlage-Charts ----------------------------------------------------- */
+
+/* Zwei Farbrollen für alle vier Chart-Reihen: "Organisationen" (was die
+ * Spieler tatsächlich erzeugt/verlangt haben) gegen "Markt" (Volumen/Preis,
+ * die Vorgabe der Runde) - produzierte Menge und ø Preis teilen sich eine
+ * Farbe, Marktvolumen und Marktpreis die andere, damit man Balken und Linie
+ * eines Paares auf einen Blick zuordnet. */
+.chart-a {
+  fill: var(--green-900);
+  stroke: var(--green-900);
+}
+
+.chart-b {
+  fill: var(--muted-2);
+  stroke: var(--muted-2);
+}
+
+.market-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 0.66rem;
+  color: var(--muted-2);
+}
+
+.market-chart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* 2x2 statt einer schmalen Liste: jedes Chart bekommt so die doppelte Höhe
+ * UND eine vernünftige Breite - erst das macht Balken/Linie überhaupt als
+ * Kurve lesbar statt sie zu einem einzelnen Klotz zu stauchen.
+ *
+ * grid-template-rows: 1fr 1fr statt der impliziten Auto-Höhe - dadurch füllt
+ * das Raster die ganze verfügbare Höhe der Marktlage-Kachel (siehe
+ * .panel-market) und beide Zeilen wachsen gleichmäßig mit, statt oben
+ * liegen zu bleiben und darunter Platz zu verschenken. */
+.market-chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 14px 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+.market-chart-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.market-chart-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 6px;
+  font-size: 0.76rem;
+}
+
+.market-chart-name {
+  font-weight: 600;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.market-chart-price {
+  font-weight: 700;
+  color: var(--green-900);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.market-chart-vol {
+  font-size: 0.68rem;
+  color: var(--muted-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.market-chart-svg {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.market-chart-svg .combo-chart {
+  width: 100%;
+  height: 100%;
+}
+
+/* Runde 1: es gibt schlicht noch keinen abgeschlossenen Datenpunkt. Eine
+ * ruhige Zeile statt eines Charts, der nur einen einsamen, halb leeren
+ * Balken zeigen könnte. */
+.market-chart-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-height: 60px;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--muted-2);
+  font-style: italic;
+}
+
+.combo-chart {
+  display: block;
+  overflow: visible;
+}
+
+/* Wachstumsanimation: Balken starten bei Höhe 0 (von unten gestaucht) und
+ * Linien ungezeichnet (Dash-Offset = eigene Länge, siehe comboChart() in
+ * charts.js), bis die Klasse .is-revealed drauf geht - dann ziehen sich die
+ * Balken hoch und die Linie zeichnet sich von links nach rechts. Einmaliger
+ * Effekt beim Erscheinen, keine Dauerschleife. */
+.combo-bar {
+  opacity: 0.9;
+  transform-box: fill-box;
+  transform-origin: bottom;
+  transform: scaleY(0);
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.combo-chart.is-revealed .combo-bar {
+  transform: scaleY(1);
+}
+
+.combo-line {
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke-dashoffset 0.9s ease;
+}
+
+.combo-chart.is-revealed .combo-line {
+  stroke-dashoffset: 0 !important;
+}
+
+.combo-dot {
+  opacity: 0;
+  transition: opacity 0.3s ease 0.7s;
+}
+
+.combo-chart.is-revealed .combo-dot {
+  opacity: 1;
+}
+
+.chart-axis-label {
+  fill: var(--muted-2);
+  font-size: 8px;
+}
+
+.panel-note {
+  margin: 0;
+  font-size: 0.68rem;
+  line-height: 1.4;
+  color: var(--muted-2);
+}
+
+/* Wetter und Ereignis als eigene Karte statt Chip+Fließtext getrennt
+ * untereinander - jede Karte trägt ihren Hilfstext direkt bei sich, beide
+ * teilen sich die volle Breite der Lage-Kachel zu gleichen Teilen. */
+.situation-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+  gap: 10px;
+}
+
+/* Die kleinen Kacheln in der dichten rechten Dashboard-Spalte: dieselbe
+ * Sprache wie die großen Karten, aber ohne den schweren Schlagschatten -
+ * vier davon nebeneinander würden sonst unruhig wirken. Vorher war
+ * .situation-card gefüllt und .market-chart-row direkt daneben komplett
+ * nackt, obwohl beide auf derselben Ebene sitzen. */
+.situation-card,
+.market-chart-row {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.situation-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.situation-card.is-event {
+  background: var(--green-100);
+}
+
+.chip {
+  align-self: flex-start;
+  display: inline-flex;
+  background: var(--rule);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.74rem;
+  color: var(--muted-1);
+}
+
+.chip.is-event {
+  background: rgba(var(--accent-rgb), 0.16);
+  color: var(--green-900);
+}
+
+.situation-desc {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--muted-1);
+}
+
+/* Fußzeile ----------------------------------------------------------------- */
+
+.dash-foot {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 24px;
+}
+
+.dash-progress {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dash-progress-text {
+  font-size: 0.8rem;
+  color: var(--muted-1);
+}
+
+.dash-waiting {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--muted-2);
+  white-space: nowrap;
+}
+
+.dash-foot .btn {
+  padding: 11px 22px;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+/* Schmaler Bildschirm: stapeln statt quetschen (z. B. Laptop hochkant). */
+@media (max-width: 1000px) {
+  .screen-dash {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .dash-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .org-list {
+    overflow: visible;
+  }
+}
+
+/* Handy-/Tablet-Breite: zwei Spalten quetschen die Karte zu schmal, hier
+ * lieber wieder untereinander. */
+@media (max-width: 700px) {
+  .org-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* KI-Gegner (Lobby + Dashboard) --------------------------------------------- */
+
+.player-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.player-item-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.player-item-role {
+  color: var(--muted-2);
+  display: inline-flex;
+}
+
+.bot-chip {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted-1);
+  background: var(--card-bg-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.player-remove {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--muted-2);
+  border-radius: 999px;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.player-remove:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.bot-add {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.bot-add-head {
+  margin-bottom: 8px;
+}
+
+.bot-add-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bot-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card-bg-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.12s ease;
+}
+
+.bot-add-btn:hover {
+  border-color: var(--green-500);
+  transform: translateY(-1px);
+}
+
+.bot-add-btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.bot-add-hint {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+}
+
+.org-bot {
+  display: inline-flex;
+  color: var(--muted-2);
+}
+
+/* Personas / Profilbilder ---------------------------------------------------- */
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--card-bg-2);
+  border: 1px solid var(--border);
+  color: var(--muted-3);
+  overflow: hidden;
+}
+
+.persona-emoji {
+  display: block;
+  line-height: 1;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+}
+
+.persona-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.persona-tile {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--muted-3);
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.12s ease;
+}
+
+.persona-tile:active {
+  transform: scale(0.95);
+}
+
+.persona-tile.selected {
+  border-color: var(--green-500);
+  background: var(--green-100);
+  color: var(--green-900);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.35);
+}
+
+.controller-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.controller-name-text {
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.controller-role {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--muted-2);
+}
+
+.org-avatar {
+  margin-right: 2px;
+}
+
+.leaderboard-avatar {
+  align-self: center;
+  margin-right: 14px;
+}
+
+.result-row-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.controller-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Marktgedächtnis: der TV-Preis trägt einen kleinen Zustands-Tag. Übersättigt
+ * rot (Preis gedrückt), knapp in Akzentfarbe (Preis oben). */
+.market-chart-price.is-over {
+  color: var(--danger);
+}
+
+.market-chart-price.is-scarce {
+  color: var(--green-500);
+}
+
+.memory-tag {
+  display: block;
+  width: fit-content;
+  margin: 3px 0 0 auto;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  background: rgba(var(--danger-rgb), 0.16);
+  color: var(--danger);
+}
+
+.market-chart-price.is-scarce .memory-tag {
+  background: rgba(var(--accent-rgb), 0.16);
+  color: var(--green-500);
+}
+
+/* Offener Kredit einer Organisation - steht neben Mitgliedern/Fläche. */
+.org-debt {
+  color: var(--danger);
+  font-weight: 600;
+}

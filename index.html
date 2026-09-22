@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>El Cartel</title>
+    <script>
+      // Vor dem ersten Paint setzen, sonst blitzt kurz das falsche Farbschema auf.
+      (function () {
+        try {
+          var stored = localStorage.getItem("derhof:theme");
+          var theme = stored || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+          document.documentElement.dataset.theme = theme;
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div class="boot-loading">El Cartel lädt …</div>
+    </div>
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
