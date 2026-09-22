@@ -1,4 +1,4 @@
-import { h, mount, fmtEUR, fmtNum } from "./dom.js";
+import { h, mount, fmtEUR, fmtNum, withRetry, renderConnectionError } from "./dom.js";
 import * as store from "./store.js";
 import { buildConfidentialForecast, buildRoundContext, capacityFactor, computeFinalScore, computeProduction, simulateYear, priceMemory, COSTS } from "./engine.js";
 import { PRODUCTS, FIELD_PRODUCTS, WORK_ROWS, STOCK_COLUMN, qtyDigits } from "./products.js";
@@ -14,33 +14,40 @@ function storageKey(gameId) {
 }
 
 export async function renderPlayer(root, gameId) {
-  const game = await store.getGame(gameId);
-  if (!game) {
-    mount(
-      root,
-      h("div", { class: "screen screen-error" }, [
-        h("h1", {}, "Spiel nicht gefunden"),
-        h("p", {}, `Der Code "${gameId}" existiert nicht (mehr). Frag den Gastgeber nach dem aktuellen QR-Code.`),
-      ]),
-    );
-    return;
-  }
+  try {
+    const game = await withRetry(() => store.getGame(gameId));
+    if (!game) {
+      mount(
+        root,
+        h("div", { class: "screen screen-error" }, [
+          h("h1", {}, "Spiel nicht gefunden"),
+          h("p", {}, `Der Code "${gameId}" existiert nicht (mehr). Frag den Gastgeber nach dem aktuellen QR-Code.`),
+        ]),
+      );
+      return;
+    }
 
-  const saved = JSON.parse(localStorage.getItem(storageKey(gameId)) || "null");
-  let player = null;
-  if (saved) {
-    const players = await store.listPlayers(gameId);
-    player = players.find((p) => p.id === saved.playerId) || null;
-  }
+    const saved = JSON.parse(localStorage.getItem(storageKey(gameId)) || "null");
+    let player = null;
+    if (saved) {
+      const players = await withRetry(() => store.listPlayers(gameId));
+      player = players.find((p) => p.id === saved.playerId) || null;
+    }
 
-  if (!player) {
-    const usedPersonas = (await store.listPlayers(gameId)).map((p) => p.persona).filter(Boolean);
-    renderJoin(root, game, usedPersonas);
-    return;
-  }
+    if (!player) {
+      const usedPersonas = (await withRetry(() => store.listPlayers(gameId))).map((p) => p.persona).filter(Boolean);
+      renderJoin(root, game, usedPersonas);
+      return;
+    }
 
-  await store.markConnected(player.id, true);
-  runController(root, game, player);
+    await withRetry(() => store.markConnected(player.id, true));
+    runController(root, game, player);
+  } catch (err) {
+    // Netzwerkfehler beim ersten Laden - ohne diesen Fang blieb die Seite
+    // beim "El Cartel lädt ..." aus index.html hängen (auf dem Handy durch
+    // WLAN-Wechsel/Funklöcher deutlich häufiger als auf dem Fernseher).
+    renderConnectionError(root, err, () => renderPlayer(root, gameId));
+  }
 }
 
 /** usedPersonas: Profilbilder, die schon jemand am Tisch hat - sie bleiben
@@ -142,37 +149,50 @@ async function runController(root, initialGame, player) {
   // noch nicht abgegebenen Slider-Einstellungen auf die Standardwerte
   // zurücksetzen, während man noch am Entscheiden ist.
   const state = { game: initialGame, resources: null, submitted: false, lastResult: null, formRound: null, playerCount: 1 };
+  // Ob schon einmal erfolgreich geladen wurde: schlägt refresh() danach mal
+  // fehl (kurzer Netzwerkaussetzer), bleibt einfach der zuletzt gezeigte
+  // Bildschirm stehen statt einer Fehlerseite - das nächste Realtime-Ereignis
+  // oder die eigene nächste Aktion holt den Stand automatisch nach. Nur beim
+  // allerersten Aufruf, wenn noch gar nichts zu sehen ist, zeigen wir einen
+  // Fehler mit Neu-versuchen-Button.
+  let loaded = false;
 
   async function refresh() {
-    state.game = await store.getGame(player.game_id);
-    if (!state.game) return;
-    const allPlayers = await store.listPlayers(player.game_id);
-    state.playerCount = allPlayers.length || 1;
-    // Kapital steht in der players-Tabelle und ändert sich jede Runde. Ohne
-    // diese Zeile bliebe das beim Beitritt geladene player-Objekt für immer
-    // auf dem Startwert stehen (10.000 €) - das Handy zeigte also nie den
-    // echten Kontostand, auch nicht in der Endwertung.
-    const own = allPlayers.find((p) => p.id === player.id);
-    if (own) Object.assign(player, own);
-    // Alle Ressourcen behalten: der Markt wächst mit dem Ausbaustand aller
-    // Organisationen, die Vorschau muss also dieselbe Marktgröße kennen wie
-    // die Rundenabrechnung beim Gastgeber.
-    state.allResources = await store.listResources(player.game_id);
-    state.resources = state.allResources.find((r) => r.player_id === player.id) || null;
-    // Marktgedächtnis braucht die Ergebnisse ALLER Organisationen der letzten
-    // zwei Runden - dieselben Daten wie beim Gastgeber, also dieselben Preise.
-    state.recentResults = state.game.round >= 3 ? await store.listResultsSince(player.game_id, state.game.round - 2) : [];
-    if (state.game.status === "PLAYING") {
-      const actions = await store.getActionsForRound(player.game_id, state.game.round);
-      state.submitted = actions.some((a) => a.player_id === player.id);
-      if (state.submitted) {
-        state.lastResult = await store.getRoundResult(player.id, state.game.round);
+    try {
+      state.game = await store.getGame(player.game_id);
+      if (!state.game) return;
+      const allPlayers = await store.listPlayers(player.game_id);
+      state.playerCount = allPlayers.length || 1;
+      // Kapital steht in der players-Tabelle und ändert sich jede Runde. Ohne
+      // diese Zeile bliebe das beim Beitritt geladene player-Objekt für immer
+      // auf dem Startwert stehen (10.000 €) - das Handy zeigte also nie den
+      // echten Kontostand, auch nicht in der Endwertung.
+      const own = allPlayers.find((p) => p.id === player.id);
+      if (own) Object.assign(player, own);
+      // Alle Ressourcen behalten: der Markt wächst mit dem Ausbaustand aller
+      // Organisationen, die Vorschau muss also dieselbe Marktgröße kennen wie
+      // die Rundenabrechnung beim Gastgeber.
+      state.allResources = await store.listResources(player.game_id);
+      state.resources = state.allResources.find((r) => r.player_id === player.id) || null;
+      // Marktgedächtnis braucht die Ergebnisse ALLER Organisationen der letzten
+      // zwei Runden - dieselben Daten wie beim Gastgeber, also dieselben Preise.
+      state.recentResults = state.game.round >= 3 ? await store.listResultsSince(player.game_id, state.game.round - 2) : [];
+      if (state.game.status === "PLAYING") {
+        const actions = await store.getActionsForRound(player.game_id, state.game.round);
+        state.submitted = actions.some((a) => a.player_id === player.id);
+        if (state.submitted) {
+          state.lastResult = await store.getRoundResult(player.id, state.game.round);
+        }
       }
+      if (state.game.round > 1) {
+        state.prevResult = await store.getRoundResult(player.id, state.game.round - 1);
+      }
+      render();
+      loaded = true;
+    } catch (err) {
+      console.error("El Cartel: Aktualisierung fehlgeschlagen", err);
+      if (!loaded) renderConnectionError(root, err, refresh);
     }
-    if (state.game.round > 1) {
-      state.prevResult = await store.getRoundResult(player.id, state.game.round - 1);
-    }
-    render();
   }
 
   function render() {

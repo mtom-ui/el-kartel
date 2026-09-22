@@ -1,4 +1,4 @@
-import { h, mount, fmtEUR, fmtNum } from "./dom.js";
+import { h, mount, fmtEUR, fmtNum, withRetry, renderConnectionError } from "./dom.js";
 import * as store from "./store.js";
 import { buildRoundContext, capacityFactor, computeProduction, allocateMarket, finalizeRound, computeFinalScore, priceMemory } from "./engine.js";
 import { FINANCE_SCORE_TARGET } from "./constants.js";
@@ -93,7 +93,15 @@ async function onCreateGame(root) {
 }
 
 async function resumeGame(root, gameId) {
-  let game = await store.getGame(gameId);
+  let game;
+  try {
+    game = await withRetry(() => store.getGame(gameId));
+  } catch (err) {
+    // Netzwerkfehler beim ersten Laden - ohne diesen Fang blieb die Seite
+    // beim "El Cartel lädt ..." aus index.html hängen.
+    renderConnectionError(root, err, () => resumeGame(root, gameId));
+    return;
+  }
   if (!game) {
     localStorage.removeItem(HOST_KEY);
     renderStart(root);
@@ -123,29 +131,39 @@ async function resumeGame(root, gameId) {
     // true springt. Wird beim nächsten "Weiter" wieder scharf gestellt.
     autoSimTriggered: false,
   };
+  // Wie in player.js: nur beim allerersten Laden einen Fehlerbildschirm
+  // zeigen, danach lieber der zuletzt gerenderte Stand stehen lassen als bei
+  // einem kurzen Netzwerkaussetzer mittendrin die laufende Partie zu stören.
+  let loaded = false;
 
   async function refresh() {
-    state.game = await store.getGame(gameId);
-    if (!state.game) return;
-    state.players = await store.listPlayers(gameId);
-    state.resources = await store.listResources(gameId);
-    if (state.game.status === "PLAYING") {
-      state.actions = await store.getActionsForRound(gameId, state.game.round);
-    }
-    if (state.game.status !== "LOBBY") {
-      state.allResults = await store.listAllRoundResults(gameId);
-    }
-    render();
-    if (state.game.status === "PLAYING" && !state.pendingResults && !state.resolving) {
-      runBots();
-      // Alle haben abgegeben: sofort auswerten, ohne auf den Host-Klick zu
-      // warten - das Regelwerk sieht ohnehin vor, dass alle simultan abgeben,
-      // der Klick war nur ein zusätzlicher manueller Schritt danach.
-      const allSubmitted = state.players.length > 0 && state.actions.length >= state.players.length;
-      if (allSubmitted && !state.autoSimTriggered) {
-        state.autoSimTriggered = true;
-        onSimulate();
+    try {
+      state.game = await store.getGame(gameId);
+      if (!state.game) return;
+      state.players = await store.listPlayers(gameId);
+      state.resources = await store.listResources(gameId);
+      if (state.game.status === "PLAYING") {
+        state.actions = await store.getActionsForRound(gameId, state.game.round);
       }
+      if (state.game.status !== "LOBBY") {
+        state.allResults = await store.listAllRoundResults(gameId);
+      }
+      render();
+      loaded = true;
+      if (state.game.status === "PLAYING" && !state.pendingResults && !state.resolving) {
+        runBots();
+        // Alle haben abgegeben: sofort auswerten, ohne auf den Host-Klick zu
+        // warten - das Regelwerk sieht ohnehin vor, dass alle simultan abgeben,
+        // der Klick war nur ein zusätzlicher manueller Schritt danach.
+        const allSubmitted = state.players.length > 0 && state.actions.length >= state.players.length;
+        if (allSubmitted && !state.autoSimTriggered) {
+          state.autoSimTriggered = true;
+          onSimulate();
+        }
+      }
+    } catch (err) {
+      console.error("El Cartel: Aktualisierung fehlgeschlagen", err);
+      if (!loaded) renderConnectionError(root, err, refresh);
     }
   }
 
