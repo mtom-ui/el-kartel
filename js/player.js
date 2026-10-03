@@ -449,7 +449,7 @@ function renderDecisionForm(root, state, player, refresh) {
           // Nicht angekommen: Button wieder freigeben und sichtbar melden,
           // statt eine Abgabe vorzutäuschen, die der TV nie sieht.
           console.error("El Cartel: Abgabe fehlgeschlagen", err);
-          submitError.textContent = "Abgabe nicht angekommen – bitte nochmal tippen.";
+          submitError.textContent = `Abgabe nicht angekommen – bitte nochmal tippen. (${err?.message || err?.code || "unbekannter Fehler"})`;
           submitBtn.disabled = false;
           return;
         }
