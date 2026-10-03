@@ -442,12 +442,23 @@ function renderDecisionForm(root, state, player, refresh) {
       class: "btn btn-primary btn-xl",
       onclick: async () => {
         submitBtn.disabled = true;
-        await store.submitAction(state.game.id, player.id, state.game.round, decisions);
+        submitError.textContent = "";
+        try {
+          await withRetry(() => store.submitAction(state.game.id, player.id, state.game.round, decisions));
+        } catch (err) {
+          // Nicht angekommen: Button wieder freigeben und sichtbar melden,
+          // statt eine Abgabe vorzutäuschen, die der TV nie sieht.
+          console.error("El Cartel: Abgabe fehlgeschlagen", err);
+          submitError.textContent = "Abgabe nicht angekommen – bitte nochmal tippen.";
+          submitBtn.disabled = false;
+          return;
+        }
         await refresh();
       },
     },
     [iconLabel("check", "Entscheidungen bestätigen", { size: 22 })],
   );
+  const submitError = h("p", { class: "submit-error", role: "alert" });
 
   mount(
     root,
@@ -505,6 +516,7 @@ function renderDecisionForm(root, state, player, refresh) {
       previewEl,
       h("div", { class: "forecast" }, [iconLabel("envelope", forecast, { size: 16 })]),
       submitBtn,
+      submitError,
     ]),
   );
 

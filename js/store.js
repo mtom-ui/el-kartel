@@ -89,13 +89,19 @@ export async function startGame(gameId) {
   await supabase.from("games").update({ status: "PLAYING", round: 1 }).eq("id", gameId);
 }
 
+/** Wirft bei jedem Fehler. Früher wurde das Ergebnis ignoriert: scheiterte der
+ * Upsert (Funkloch, Datenbankfehler), sah der Spieler "abgegeben", der TV aber
+ * nie eine Abgabe. Der Upsert ist über (player_id, round) idempotent, daher
+ * ist ein erneuter Versuch gefahrlos. */
 export async function submitAction(gameId, playerId, round, decisions) {
-  await supabase
-    .from("actions")
-    .upsert(
-      { game_id: gameId, player_id: playerId, round, action_type: "round_decision", payload: decisions },
-      { onConflict: "player_id,round" },
-    );
+  must(
+    await supabase
+      .from("actions")
+      .upsert(
+        { game_id: gameId, player_id: playerId, round, action_type: "round_decision", payload: decisions },
+        { onConflict: "player_id,round" },
+      ),
+  );
 }
 
 export async function getActionsForRound(gameId, round) {

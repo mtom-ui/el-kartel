@@ -120,6 +120,23 @@ create policy "allow all actions" on actions for all to anon, authenticated usin
 drop policy if exists "allow all round_results" on round_results;
 create policy "allow all round_results" on round_results for all to anon, authenticated using (true) with check (true);
 
+-- Data API Grants ------------------------------------------------------------
+-- Ab 30. Oktober 2026 vergibt Supabase diese Grants für NEUE Tabellen nicht
+-- mehr automatisch - ohne sie liefert die Data API "permission denied", egal
+-- was RLS erlaubt. Bestehende (schon angelegte) Tabellen behalten ihre
+-- bisherigen Grants und sind davon nicht betroffen; das hier ist nur nötig,
+-- falls dieses schema.sql je gegen ein frisches/zurückgesetztes Projekt
+-- läuft. Deckt sich mit den RLS-Policies oben (anon+authenticated dürfen
+-- alles, das Spiel läuft offen unter Freunden).
+
+grant usage on schema public to anon, authenticated;
+
+grant select, insert, update, delete on games, players, player_resources, buildings, actions, round_results
+  to anon, authenticated;
+
+grant select, insert, update, delete on games, players, player_resources, buildings, actions, round_results
+  to service_role;
+
 -- Realtime -----------------------------------------------------------------
 -- Damit TV und Handys Änderungen live sehen (Spieler-Beitritt, Rundenwechsel,
 -- Ergebnisse), müssen die Tabellen der Realtime-Publikation hinzugefügt
