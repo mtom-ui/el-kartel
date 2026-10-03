@@ -218,9 +218,10 @@ function seededDemand(gameSeed, round, product) {
 // 1,0 hieße: jede Organisation bekommt immer gleich viel Markt wie allein
 // (kein Wettbewerb); 0,6 war bei 7 Spielern zu eng - der Markt war dauerhaft
 // übersättigt (Angebot weit über dem Topf), weil die Produktion linear mit der
-// Spielerzahl wächst. 0,75 lässt bei 7 Spielern gut ein Drittel mehr Volumen,
-// bei 2 Spielern nur rund 10% mehr.
-export const POOL_SCALE_EXPONENT = 0.75;
+// Spielerzahl wächst, und echte Spieler produzieren deutlich aggressiver als
+// Bots. 0,85 gibt bei 7 Spielern gut 60% mehr Volumen als 0,6, bei 2 Spielern
+// nur rund 17% mehr.
+export const POOL_SCALE_EXPONENT = 0.85;
 
 // Mit mehr Organisationen wächst der gemeinsame Markttopf (sublinear, siehe POOL_SCALE_EXPONENT),
 // weil eine reine Vervielfachung mit n das Spiel ab sechs Spielern
