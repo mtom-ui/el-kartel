@@ -214,13 +214,21 @@ function seededDemand(gameSeed, round, product) {
   return min + rng() * (max - min);
 }
 
-// Mit mehr Organisationen wächst der gemeinsame Markttopf (sublinear, n^0.6),
+// Wie stark der Markttopf mit der Spielerzahl wächst (Skalierung = n^Exponent).
+// 1,0 hieße: jede Organisation bekommt immer gleich viel Markt wie allein
+// (kein Wettbewerb); 0,6 war bei 7 Spielern zu eng - der Markt war dauerhaft
+// übersättigt (Angebot weit über dem Topf), weil die Produktion linear mit der
+// Spielerzahl wächst. 0,75 lässt bei 7 Spielern gut ein Drittel mehr Volumen,
+// bei 2 Spielern nur rund 10% mehr.
+export const POOL_SCALE_EXPONENT = 0.75;
+
+// Mit mehr Organisationen wächst der gemeinsame Markttopf (sublinear, siehe POOL_SCALE_EXPONENT),
 // weil eine reine Vervielfachung mit n das Spiel ab sechs Spielern
 // mathematisch unspielbar gemacht hat. Alle Organisationen konkurrieren um
 // denselben Topf (siehe allocateMarket) statt je eine eigene Garantiemenge
 // zu bekommen.
 function poolScale(playerCount) {
-  return Math.pow(Math.max(1, playerCount), 0.6);
+  return Math.pow(Math.max(1, playerCount), POOL_SCALE_EXPONENT);
 }
 
 // Wie stark der Markt mitwächst, wenn die Organisationen ausbauen. 0,5 heißt:
